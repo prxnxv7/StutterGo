@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stutter Detection Upload</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 {
+      margin-bottom: 1rem;
+    }
+    input[type="file"] {
+      margin-bottom: 1rem;
+    }
+    #response {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>Upload WAV File for Stutter Analysis</h2>
+  <form id="uploadForm">
+    <input type="file" id="audioFile" accept=".wav" required><br>
+    <button type="submit">Analyze</button>
+  </form>
+
+  <div id="response"></div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const responseDiv = document.getElementById("response");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fileInput = document.getElementById("audioFile");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select a .wav file first.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      responseDiv.textContent = "Uploading and analyzing...";
+
+      try {
+        const res = await fetch("http://localhost:8000/api/analyze/", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await res.json();
+        responseDiv.innerHTML = `
+          <strong>Transcript:</strong> ${result.transcript}<br>
+          <strong>Stutter Count:</strong> ${result.num_stutters}<br>
+          <strong>Most Stuttered Phoneme:</strong> ${result.most_stuttered_phoneme || 'N/A'}<br>
+          <strong>Practice Passage:</strong><br> ${result.practice_passage}
+        `;
+      } catch (error) {
+        responseDiv.textContent = "Error: " + error.message;
+      }
+    });
+  </script>
+</body>
+</html>
